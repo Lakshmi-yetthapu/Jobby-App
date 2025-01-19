@@ -46,6 +46,8 @@ const salaryRangesList = [
   },
 ]
 
+const locationsList = ['Hyderabad', 'Bangalore', 'Chennai', 'Delhi', 'Mumbai']
+
 const apiStatusConstants = {
   initial: 'INITIAL',
   success: 'SUCCESS',
@@ -60,6 +62,7 @@ class Jobs extends Component {
     employeeType: [],
     minimumSalary: 0,
     searchInput: '',
+    selectedLocations: [],
   }
 
   componentDidMount() {
@@ -70,8 +73,13 @@ class Jobs extends Component {
     this.setState({
       apiStatus: apiStatusConstants.inProgress,
     })
-    const {employeeType, minimumSalary, searchInput} = this.state
-    const apiUrl = `https://apis.ccbp.in/jobs?employment_type=${employeeType.join()}&minimum_package=${minimumSalary}&search=${searchInput}`
+    const {
+      employeeType,
+      minimumSalary,
+      searchInput,
+      selectedLocations,
+    } = this.state
+    const apiUrl = `https://apis.ccbp.in/jobs?employment_type=${employeeType.join()}&minimum_package=${minimumSalary}&search=${searchInput}&location=${selectedLocations.join()}`
     const jwtToken = Cookies.get('jwt_token')
 
     const options = {
@@ -102,6 +110,22 @@ class Jobs extends Component {
         apiStatus: apiStatusConstants.failure,
       })
     }
+  }
+
+  changeLocation = location => {
+    this.setState(prevState => {
+      const isLocationSelected = prevState.selectedLocations.includes(location)
+      if (isLocationSelected) {
+        return {
+          selectedLocations: prevState.selectedLocations.filter(
+            eachLocation => eachLocation !== location,
+          ),
+        }
+      }
+      return {
+        selectedLocations: [...prevState.selectedLocations, location],
+      }
+    }, this.getJobs)
   }
 
   renderJobsList = () => {
@@ -173,45 +197,27 @@ class Jobs extends Component {
     }
   }
 
-  changeSearchInput = event => {
-    this.setState({searchInput: event.target.value})
-  }
-
-  onEnterSearchInput = event => {
-    if (event.key === 'Enter') {
-      this.getJobs()
-    }
-  }
-
-  changeSalary = salary => {
-    this.setState({minimumSalary: salary}, this.getJobs)
-  }
-
-  changeEmployeeList = type => {
-    this.setState(
-      prevState => ({
-        employeeType: [...prevState.employeeType, type],
-      }),
-      this.getJobs,
-    )
-  }
-
   render() {
-    const {searchInput} = this.state
+    const {searchInput, selectedLocations} = this.state
     return (
       <>
         <Header />
         <div className="jobs-container">
           <div className="jobs-content">
-            <FiltersGroup
-              employmentTypesList={employmentTypesList}
-              salaryRangesList={salaryRangesList}
-              changeSearchInput={this.changeSearchInput}
-              searchInput={searchInput}
-              getJobs={this.getJobs}
-              changeSalary={this.changeSalary}
-              changeEmployeeList={this.changeEmployeeList}
-            />
+            <div className="sidebar-container">
+              <FiltersGroup
+                employmentTypesList={employmentTypesList}
+                salaryRangesList={salaryRangesList}
+                locationsList={locationsList}
+                changeLocation={this.changeLocation}
+                selectedLocations={selectedLocations}
+                changeSearchInput={this.changeSearchInput}
+                searchInput={searchInput}
+                getJobs={this.getJobs}
+                changeSalary={this.changeSalary}
+                changeEmployeeList={this.changeEmployeeList}
+              />
+            </div>
             <div className="search-input-jobs-list-container">
               <div className="search-input-container-desktop">
                 <input
